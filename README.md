@@ -105,6 +105,10 @@ Optional account synchronization, additional licensed catalogs, offline PWA supp
 
 Application source is MIT licensed. Third-party recordings, artist images and API content remain subject to their creators’ rights and provider terms.
 
+## React Native app
+
+`mobile/` contains the native rewrite of Vibe (Expo + React Native, soft-UI design). It plays full songs from Audius and live Desi radio from Radio Browser, without YouTube or API keys, and supports background playback. See [mobile/README.md](mobile/README.md).
+
 ## Android APK
 
 Download the installable Android package from [the latest GitHub release](https://github.com/lilesh0070/vibe/releases/latest/download/Vibe.apk). Requires Android 8.0+ and internet access. The APK opens the hosted Vibe app in Android System WebView, including the visible official YouTube player. Android's browser downloads APKs; the system installer asks the user to confirm installation. Music playback pauses when the app leaves the foreground.

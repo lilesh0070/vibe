@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "name": "Vibe",
+    "slug": "vibe",
+    "scheme": "vibe",
+    "version": "3.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#E7EAF0",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "io.github.lilesh0070.vibeapp"
+    },
+    "android": {
+      "package": "io.github.lilesh0070.vibeapp",
+      "versionCode": 30000,
+      "permissions": ["android.permission.REQUEST_INSTALL_PACKAGES"],
+      "adaptiveIcon": {
+        "backgroundColor": "#FF7A5C",
+        "foregroundImage": "./assets/icon.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": true
+        }
+      ],
+      "expo-asset",
+      "./plugins/withBackupRules",
+      "./plugins/withShortObjectPaths"
+    ]
+  }
+}

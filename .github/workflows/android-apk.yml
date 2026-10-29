@@ -1,0 +1,46 @@
+# Builds the React Native app's release APK on Linux (no Windows path-length limits).
+# The artifact is signed with the debug key only; sign it locally with
+#   mobile/scripts/build-apk.ps1 -Unsigned <downloaded app-release.apk>
+# so the release key never leaves the developer's machine.
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, react-native-app]
+    paths: ["mobile/**", ".github/workflows/android-apk.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - run: npm ci
+      - run: npm test
+      - run: npx expo prebuild --platform android --no-install
+        env:
+          CI: "1"
+      - run: ./gradlew assembleRelease -PreactNativeArchitectures=armeabi-v7a,arm64-v8a,x86_64 --no-daemon
+        working-directory: mobile/android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vibe-release-unsigned
+          path: mobile/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 14
