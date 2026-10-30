@@ -44,7 +44,7 @@ try {
   New-Item -ItemType Directory -Force -Path $dist | Out-Null
   $apk = Join-Path $dist 'Vibe.apk'
   # Gradle signs release builds with the debug key; re-sign with the release key.
-  Run (Join-Path $tools 'apksigner.bat') @('sign', '--ks', $key, '--ks-key-alias', 'vibe', '--ks-pass', "file:$password", '--key-pass', "file:$password", '--out', $apk, $built)
+  Run (Join-Path $tools 'apksigner.bat') @('sign', '--ks', $key, '--ks-key-alias', 'vibe', '--ks-pass', "file:$password", '--out', $apk, $built)
   Run (Join-Path $tools 'apksigner.bat') @('verify', '--print-certs', $apk)
   Run (Join-Path $tools 'zipalign.exe') @('-c', '-P', '16', '4', $apk)
 
