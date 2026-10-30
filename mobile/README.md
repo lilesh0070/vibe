@@ -1,82 +1,147 @@
 # Vibe (React Native)
 
-The native version of Vibe, built with Expo SDK 58, React Native 0.88 and Expo Router, in a soft-UI (neumorphism) design. One codebase runs on Android, iOS and the web.
+The native Android app for Vibe. It is built with Expo SDK 58, React Native 0.88 and Expo Router, in a soft-UI (neumorphism) design. The same code also runs on the web for previewing; iOS has not been built yet.
+
+- **Latest APK:** https://github.com/lilesh0070/vibe/releases/latest/download/Vibe.apk
+- **Package:** `io.github.lilesh0070.vibeapp`
+- **Current version:** 3.0.0 (`app.json`)
 
 ## Where the music comes from
 
 There is no YouTube playback and no API key. Every source is free and public:
 
-| Source | What it provides | Key |
+| Source | Used for | File |
 |---|---|---|
-| [Audius API](https://docs.audius.co/) | Full-length songs: trending, search, artists, playlists, plus Hindi, Punjabi and Haryanvi collections built from searches | None |
-| [Radio Browser](https://api.radio-browser.info/) | Live internet radio: Bollywood, Hindi, Punjabi, Haryanvi, Bhojpuri, Retro, Bhakti, Tamil and more (HTTPS MP3/AAC streams only) | None |
+| [Audius API](https://docs.audius.co/) | Full songs: trending, search, artists, playlists, Desi collections | `src/services/audius.js` |
+| [Internet Archive](https://archive.org/advancedsearch.php) | Extra Indian uploads in singer searches (MP3 links) | `src/services/archive.js` |
+| [Radio Browser](https://api.radio-browser.info/) | Live radio (HTTPS MP3/AAC streams only) | `src/services/radio.js` |
+| [iTunes Search API](https://performance-partners.apple.com/search-api) | Only to correct singer spellings and look up real song titles. Previews are never played. | `src/services/itunes.js` |
 
-Mainstream label releases (T-Series and similar) are not available as free full streams through any legitimate API. Audius has independent uploads, covers and remixes, and the radio stations play mainstream Bollywood live. Unofficial JioSaavn/Gaana wrappers are deliberately not used because they bypass those services' licensing terms.
+Mainstream label releases (T-Series and similar) are not available as free full streams through any legitimate API. Unofficial JioSaavn/Gaana wrappers are deliberately not used because they bypass those services' licensing terms.
 
 ## Features
 
-- Home: Desi Vibes shuffle mix, live Desi radio, trending, Punjabi/Hindi/Haryanvi rails, "Made for you" recommendations and a genre grid
-- Search across songs, artists, playlists and radio stations, with filters and recent searches
-- Live radio by category, with saved stations
-- Library: listening stats ("top vibe"), liked songs, playlists (create, rename, delete), saved stations and history
-- Full player: spinning disc, seek bar, shuffle, repeat (all/one), queue editing, sleep timer
-- Background playback and lock-screen controls through `expo-audio`
-- The last queue and position are restored when the app opens
+- **Home:** Desi Vibes shuffle mix, live Desi radio, trending, Punjabi/Hindi/Haryanvi rails, "Made for you", genre grid, an update banner and an offline banner.
+- **Search:** songs, artists, playlists and radio. It handles Hinglish spellings ("sidhu moselvala" becomes Sidhu Moose Wala) and shows "Showing results for…" with an option to search the original text instead.
+- **Radio:** stations by category, with saved stations.
+- **Library:** listening stats, liked songs, playlists, downloads, saved stations, history and the updates screen.
+- **Player:** background playback, lock-screen controls, shuffle, repeat, queue editing and a sleep timer.
+- **Offline downloads:** single songs or "Download all" for a collection. Files are app-private and play without internet.
+- **In-app updates:** reads the latest GitHub release, downloads `Vibe.apk` and opens Android's installer.
 
-Everything is stored on the device with AsyncStorage. The recommendation engine is shared with the web app (`src/services/recommendationEngine.js`).
+All user data (likes, playlists, history, downloads list, player state) is stored on the device with AsyncStorage.
 
 ## Run it
 
-Requires Node.js 22.13 or newer (Expo SDK 58 warns on Node 20).
+Requires Node.js 22.13 or newer. Node 20 still works but Expo prints a warning.
 
 ```sh
 cd mobile
 npm install
-npm start          # scan the QR code with Expo Go, or press a / w
-npm run web        # browser preview
-npm test           # recommendation and formatting tests
+npm run web        # browser preview at http://localhost:8081
+npm start          # Expo dev server (Expo Go cannot do background audio)
+npm test           # 51 unit tests (node --test finds tests/*.test.mjs)
 ```
 
-Background audio and lock-screen controls need a real build, not Expo Go.
+Use `npx expo install <package>` instead of `npm install <package>` so versions match SDK 58. `mobile/AGENTS.md` has Expo's own notes for AI assistants.
 
-## Build an APK
-
-The `android/` folder is generated, never edited by hand (configure `app.json` instead). On Windows, with `ANDROID_HOME` (platform 35, build-tools 36.0.0) and `JAVA_HOME` (JDK 17+) set:
-
-```powershell
-pwsh -File .\scripts\build-apk.ps1
-```
-
-The script regenerates `android/`, runs the Gradle release build, signs the result with the key in `credentials/` and writes `dist/Vibe.apk` plus `dist/SHA256SUMS.txt`.
-
-On Windows, React Native's C++ build exceeds the 260-character path limit unless long paths are enabled. The easier route: the **Android APK** GitHub Actions workflow builds the APK on Linux on every push that touches `mobile/`. Download its `vibe-release-unsigned` artifact, then sign it locally so the key never leaves your machine:
-
-```powershell
-gh run download --name vibe-release-unsigned --dir .\dist\ci
-pwsh -File .\scripts\build-apk.ps1 -Unsigned .\dist\ci\app-release.apk
-```
-
-The package name is `io.github.lilesh0070.vibeapp`, so it installs next to the old WebView app (`io.github.lilesh0070.vibe`) instead of clashing with it. Its data does not carry over from that app.
-
-**Keep `credentials/vibe-release.jks` and `credentials/keystore-password.txt` backed up privately.** They are gitignored. Every future APK must be signed with this key, or Android refuses to install it as an update.
-
-## Releasing an update
-
-1. Raise `version` and `android.versionCode` in `app.json` (for example 3.0.1 / 30001).
-2. Build with `scripts/build-apk.ps1`.
-3. Publish a GitHub release tagged `v3.0.1` with `dist/Vibe.apk` attached under that exact name.
-
-Installed apps find it under **Library → Updates**, and on launch (at most every 12 hours). They download the APK and open Android's installer.
-
-## Structure
+## How the code is organised
 
 ```text
 src/
-  app/            # Expo Router screens: (tabs)/index, search, radio, library; player, queue,
-                  # artist/[id], genre/[name], playlist/[id], album/[id]
-  components/     # soft-UI primitives (ui.js), artwork, track rows/cards, sheets, player bits
-  context/        # LibraryContext (likes, playlists, history), PlayerContext (queue + audio)
-  services/       # audius.js, radio.js, storage.js, recommendationEngine.js
-  theme.js        # colors, shadows, radii and fonts for the soft UI
-tests/
+  app/                 # Expo Router screens
+    (tabs)/            # index (Home), search, radio, library + custom soft tab bar
+    player.js queue.js updates.js downloads.js
+    artist/[id].js genre/[name].js playlist/[id].js album/[id].js
+  components/          # ui.js (soft-UI primitives), Tracks, Sheets (track menu), PlayerBits,
+                       # CollectionHeader ("Download all"), Toast, Screen, Tiles, Artwork
+  context/
+    LibraryContext.js  # likes, playlists, history, stats
+    DownloadContext.js # download queue (2 at a time); progress in its own context
+    PlayerContext.js   # one expo-audio player; plays the local file if downloaded
+    UpdateContext.js   # update checks (every 12 h on Android) and APK download
+  services/            # audius, archive, radio, itunes, search (orchestration),
+                       # matching (Hinglish name matching), indianArtists (offline list),
+                       # downloads, updates, storage, net, recommendationEngine
+  utils/               # pure helpers, no imports, so Node tests can load them
+  theme.js             # colors, shadows, radii, fonts
+plugins/               # local Expo config plugins (see below)
+scripts/build-apk.ps1  # build and/or sign the release APK
+tests/                 # node:test files
 ```
+
+Conventions:
+- Every network call goes through `fetchJson` in `services/net.js`. Hermes has no `AbortSignal.timeout`.
+- Tested logic lives in import-free files under `utils/` or `services/matching.js`. Node's ESM loader cannot resolve the app's extensionless imports.
+- Fast-changing values (playback position, download progress) live in separate hooks (`useProgress`, `useDownloadProgress`, `useUpdateProgress`), so the whole app does not re-render.
+- Avoid regex features Hermes may lack, such as `\p{L}`.
+
+## Native configuration
+
+`android/` is generated by `expo prebuild` and is gitignored. Never edit it by hand. Change `app.json`, `plugins/` or `react-native.config.js` instead.
+
+| File | Why it exists |
+|---|---|
+| `app.json` → `android.permissions` | `REQUEST_INSTALL_PACKAGES` for the in-app updater |
+| `plugins/withBackupRules.js` | Keeps downloaded songs out of Android Auto Backup (25 MB quota); otherwise the library backup would stop |
+| `plugins/withShortObjectPaths.js` | Asks CMake to shorten object paths (helps, but does not fix Windows builds on its own) |
+| `react-native.config.js` | Leaves out `react-native-gesture-handler` and `react-native-reanimated`. expo-router pulls them in, but Vibe never calls them, and they break Windows builds. If you add a drawer or any gesture/animation library, remove this exclusion. |
+
+## Building the APK
+
+### Recommended: GitHub Actions + local signing
+
+`.github/workflows/android-apk.yml` builds the release APK on Linux for every push to `main` or `react-native-app` that touches `mobile/`. You can also start it by hand from the Actions tab. The artifact is signed only with the debug key, so you sign it yourself:
+
+```powershell
+cd mobile
+gh run download <run-id> --name vibe-release-unsigned --dir .\dist\ci
+powershell -ExecutionPolicy Bypass -File .\scripts\build-apk.ps1 -Unsigned .\dist\ci\app-release.apk
+```
+
+This writes `dist/Vibe.apk` (signed with the release key) and `dist/SHA256SUMS.txt`. `gh run list --branch main` shows the run ids.
+
+### Local build (only if long paths work)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\build-apk.ps1
+```
+
+Needs `ANDROID_HOME` (platform 35+, build-tools 36.0.0) and `JAVA_HOME` (JDK 17+). On Windows this fails in React Native's C++ build with "Filename longer than 260 characters", unless Windows long paths are enabled **and** CMake uses a ninja newer than 1.10. The Android SDK's CMake 3.22.1 and 3.31.4 both ship ninja 1.10.2. Use the GitHub Actions route instead.
+
+### Signing key (important)
+
+- The key lives in `mobile/credentials/vibe-release.jks`, and its password in `mobile/credentials/keystore-password.txt`. Both are gitignored and exist only on the original developer's machine.
+- **Back them up privately.** Every update must be signed with this exact key. With a different key, Android refuses to install the update over the existing app.
+- Never commit the key or put it in GitHub secrets. The CI workflow is designed so the key is not needed there.
+
+## Releasing an update
+
+1. In `app.json`, raise `version` and `android.versionCode`, for example `3.0.1` / `30001` (versionCode = major×10000 + minor×100 + patch).
+2. Commit and push to `main`, then wait for the **Android APK** workflow.
+3. Download the artifact and sign it (see above).
+4. Publish the release. The tag must be `v` + version, and the asset must be named exactly `Vibe.apk`:
+
+   ```powershell
+   gh release create v3.0.1 .\dist\Vibe.apk .\dist\SHA256SUMS.txt --title "Vibe 3.0.1" --notes "What changed" --latest
+   ```
+
+Installed apps find the update under **Library → Updates** (the cloud icon), or by themselves at most every 12 hours. They download the APK and open Android's installer, and the user taps Install. The first time, Android asks the user to allow "Install unknown apps" for Vibe.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `Filename longer than 260 characters` in `buildCMake…` | Windows path limit. Build with GitHub Actions. |
+| Gradle: `Unable to establish loopback connection` | The JVM cannot create sockets in `%TEMP%` (sandboxed shells). `build-apk.ps1` already sets `JAVA_TOOL_OPTIONS=-Djdk.net.unixdomain.tmpdir=android\.uds`. |
+| `'gradlew.bat' is not recognized` | The shell does not search the current folder. Call it by full path, as the script does. |
+| Gradle stalls downloading `react-android-*.aar` (~170 MB) | Download it with `curl -C -`, check the SHA-1 from the `.module` file, and place it under `~/.gradle/caches/modules-2/files-2.1/com.facebook.react/react-android/<ver>/<sha1>/`. |
+| apksigner: `end of file reached` in the password file | Pass only `--ks-pass file:…`. The key password defaults to the same value. |
+| `npm install` fails with `ECONNRESET` | Add `--fetch-retries=8 --maxsockets=4`. For huge tarballs, download them with curl and run `npm cache add <file>`. |
+| Search corrects a word it shouldn't | Adjust `matchArtist` / `COMMON` in `services/matching.js`, or the list in `services/indianArtists.js`, and add a test in `tests/search.test.mjs`. |
+
+## Not yet verified
+
+- The full update install (from one signed version to the next) on a real phone.
+- iOS builds.
+- Download behaviour when the app is killed in the background on a real device.

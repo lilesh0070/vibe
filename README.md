@@ -1,5 +1,11 @@
 # Vibe — Find your frequency
 
+> **This repository has two apps:**
+> - **`mobile/` — the Android app (Vibe 3.x, React Native).** This is the app people install. Download: [Vibe.apk](https://github.com/lilesh0070/vibe/releases/latest/download/Vibe.apk). The developer guide (run, build, sign, release, troubleshooting) is in [mobile/README.md](mobile/README.md).
+> - **Repository root — the web app (Vibe 2.x, React + Vite)** on GitHub Pages, described below.
+>
+> `android/` at the root is the old 2.x WebView wrapper. It is kept for reference, and the 3.x app replaces it.
+
 A complete, original music discovery and streaming application built with React, JavaScript, Vite, HTML5, CSS3 and React Router. Vibe combines an expressive dark interface with a persistent global audio player and a personal library stored on your device. It runs entirely in the browser and is ready for GitHub Pages.
 
 ## Features
@@ -107,20 +113,8 @@ Application source is MIT licensed. Third-party recordings, artist images and AP
 
 ## React Native app
 
-`mobile/` contains the native rewrite of Vibe (Expo + React Native, soft-UI design). It plays full songs from Audius and live Desi radio from Radio Browser, without YouTube or API keys, and supports background playback. See [mobile/README.md](mobile/README.md).
+`mobile/` contains the native Android app (Expo + React Native, soft-UI design). It plays full songs from Audius and the Internet Archive and live Desi radio from Radio Browser, with no YouTube and no API keys. It also handles Hinglish singer search, offline downloads, background playback and in-app updates from GitHub Releases. See [mobile/README.md](mobile/README.md).
 
-## Android APK
+## Legacy Android APK (2.x WebView)
 
-Download the installable Android package from [the latest GitHub release](https://github.com/lilesh0070/vibe/releases/latest/download/Vibe.apk). Requires Android 8.0+ and internet access. The APK opens the hosted Vibe app in Android System WebView, including the visible official YouTube player. Android's browser downloads APKs; the system installer asks the user to confirm installation. Music playback pauses when the app leaves the foreground.
-
-**Updates & downloads** provides a direct APK download and, inside the Android app, a separate Android-version check. Web app updates use **Check for updates → Update & restart**. The Android package version is independent of the hosted web version. Install new APKs over the existing Vibe app to retain its local library; browser/PWA libraries are separate from Android WebView storage.
-
-The local source repository is at `D:\Vibe`. Build an APK with Android SDK platform 35, Build Tools 36.0.0, and JDK 17+:
-
-```powershell
-$env:ANDROID_HOME = 'D:\dev\android-sdk'
-$env:JAVA_HOME = 'D:\dev\jdk17'
-pwsh -NoProfile -File .\android\build.ps1
-```
-
-The build script compiles, aligns and signs `android/build/Vibe.apk`, verifies signatures and writes `SHA256SUMS.txt`. The private release key and its generated password remain in ignored `android/signing/`; preserve them privately for future APK updates, and never upload them. Android source, the build script and web source are public; signing credentials and build caches are excluded.
+The 2.x Android app (`io.github.lilesh0070.vibe`, built from `android/` with `android/build.ps1`) opened the hosted web app in Android System WebView. The latest GitHub release is now the 3.x React Native app (`io.github.lilesh0070.vibeapp`), which installs next to the old app instead of replacing it. The 2.x signing key (`android/signing/`) is not in this repository and is not available on the current build machine, so 2.x can no longer receive updates.
